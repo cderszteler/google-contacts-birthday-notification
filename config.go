@@ -22,8 +22,9 @@ type Config struct {
 		Host     string `yaml:"host"`
 		User     string `yaml:"user"`
 		Password string `yaml:"password"`
+		Sender   string `yaml:"sender"`
 		Receiver string `yaml:"receiver"`
-		Secure   bool   `yaml:"secure"`
 		Tls      bool   `yaml:"tls"`
+		Secure   bool   `yaml:"secure"`
 	} `yaml:"mail"`
 }
