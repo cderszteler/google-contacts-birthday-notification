@@ -7,6 +7,7 @@ import (
 var client *mail.Client
 
 func createClient() {
+func createMailClient() {
 	var tlsPolicy mail.TLSPolicy
 	if config.Mail.Tls && config.Mail.Secure {
 		tlsPolicy = mail.TLSMandatory
@@ -28,7 +29,7 @@ func createClient() {
 
 func SendMail(message string) error {
 	if client == nil {
-		createClient()
+		createMailClient()
 	}
 
 	m := mail.NewMsg()

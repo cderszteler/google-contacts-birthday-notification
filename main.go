@@ -5,14 +5,17 @@ import (
 	"os"
 )
 
+var config Config
+
 func main() {
-	var config Config
-	err := ReadConfig(&config)
-	if err != nil {
+	if err := ReadConfig(&config); err != nil {
 		processError(err)
 	}
+	CreateService()
 
-	fmt.Printf("%+v", config)
+	if err := SendMail("test"); err != nil {
+		processError(err)
+	}
 }
 
 func processError(err error) {

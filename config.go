@@ -27,4 +27,10 @@ type Config struct {
 		Tls      bool   `yaml:"tls"`
 		Secure   bool   `yaml:"secure"`
 	} `yaml:"mail"`
+	PeopleApi struct {
+		AccessToken  string `yaml:"accessToken"`
+		TokenType    string `yaml:"tokenType"`
+		RefreshToken string `yaml:"refreshToken"`
+		Expiry       string `yaml:"expiry"`
+	} `yaml:"peopleApi"`
 }
