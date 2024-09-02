@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -11,7 +12,55 @@ import (
 	"google.golang.org/api/people/v1"
 )
 
+type Contact struct {
+	Name     string
+	Birthday people.Date
+}
+
 var service *people.Service
+
+func ListAllContacts() []Contact {
+	var contacts = make([]Contact, 0)
+	var nextPageToken string
+	if service == nil {
+		CreateService()
+	}
+
+	for {
+		response, updated, err := listContactsPaginated(nextPageToken, contacts)
+		if err != nil {
+			log.Fatalf("Error listing contacts: %v", err)
+		}
+
+		contacts = updated
+		nextPageToken = response.NextPageToken
+		if nextPageToken == "" {
+			break
+		}
+	}
+
+	return contacts
+}
+
+func listContactsPaginated(pageToken string, contacts []Contact) (*people.ListConnectionsResponse, []Contact, error) {
+	response, err := service.People.Connections.List("people/me").
+		PageToken(pageToken).
+		PersonFields("names,birthdays").
+		Do()
+
+	if err != nil {
+		return nil, contacts, fmt.Errorf("unable to retrieve people: %v", err)
+	}
+
+	for _, connection := range response.Connections {
+		if len(connection.Names) > 0 && len(connection.Birthdays) > 0 {
+			name := connection.Names[0].DisplayName
+			birthday := connection.Birthdays[0].Date
+			contacts = append(contacts, Contact{Name: name, Birthday: *birthday})
+		}
+	}
+	return response, contacts, nil
+}
 
 func CreateService() {
 	ctx := context.Background()

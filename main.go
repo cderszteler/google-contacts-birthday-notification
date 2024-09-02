@@ -13,6 +13,11 @@ func main() {
 	}
 	CreateService()
 
+	contacts := ListAllContacts()
+	for _, contact := range contacts {
+		fmt.Printf("Contact: %+v\n", contact)
+	}
+
 	if err := SendMail("test"); err != nil {
 		processError(err)
 	}
