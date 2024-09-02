@@ -22,6 +22,21 @@ type Mail struct {
 }
 
 type PeopleApi struct {
+	Credentials Credentials `yaml:"credentials"`
+	Token       Token       `yaml:"token"`
+}
+
+type Credentials struct {
+	ClientId            string   `yaml:"clientId"`
+	ProjectId           string   `yaml:"projectId"`
+	AuthUri             string   `yaml:"authUri"`
+	TokenUri            string   `yaml:"tokenUri"`
+	AuthProviderCertUrl string   `yaml:"authProviderCertUrl"`
+	ClientSecret        string   `yaml:"clientSecret"`
+	RedirectUris        []string `yaml:"redirectUris"`
+}
+
+type Token struct {
 	AccessToken  string `yaml:"accessToken"`
 	TokenType    string `yaml:"tokenType"`
 	RefreshToken string `yaml:"refreshToken"`
@@ -58,10 +73,23 @@ var defaultConfig = Config{
 		Secure:   false,
 	},
 	PeopleApi: PeopleApi{
-		AccessToken:  "",
-		TokenType:    "Bearer",
-		RefreshToken: "",
-		Expiry:       "2024-07-31T15:07:33.6502681+02:00",
+		Credentials: Credentials{
+			ClientId:            "",
+			ProjectId:           "birthday-notification",
+			AuthUri:             "https://accounts.google.com/o/oauth2/auth",
+			TokenUri:            "https://oauth2.googleapis.com/token",
+			AuthProviderCertUrl: "https://www.googleapis.com/oauth2/v1/certs",
+			ClientSecret:        "",
+			RedirectUris: []string{
+				"http://localhost",
+			},
+		},
+		Token: Token{
+			AccessToken:  "",
+			TokenType:    "Bearer",
+			RefreshToken: "",
+			Expiry:       "2024-07-31T15:07:33.6502681+02:00",
+		},
 	},
 }
 
