@@ -23,7 +23,7 @@ func ListAllContacts() []Contact {
 	var contacts = make([]Contact, 0)
 	var nextPageToken string
 	if service == nil {
-		CreateService()
+		createService()
 	}
 
 	for {
@@ -62,7 +62,7 @@ func listContactsPaginated(pageToken string, contacts []Contact) (*people.ListCo
 	return response, contacts, nil
 }
 
-func CreateService() {
+func createService() {
 	ctx := context.Background()
 	credentials := parseCredentialsConfig()
 	client := createClient(credentials)
