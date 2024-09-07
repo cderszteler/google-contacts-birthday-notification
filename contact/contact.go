@@ -1,8 +1,10 @@
-package main
+package contact
 
 import (
 	"context"
 	"fmt"
+	"google-contacts-birthday-notification/config"
+	"google.golang.org/api/googleapi"
 	"log"
 	"net/http"
 	"time"
@@ -12,22 +14,27 @@ import (
 	"google.golang.org/api/people/v1"
 )
 
+type ServiceInterface interface {
+	PersonFields(personFields string) ServiceInterface
+	PageToken(pageToken string) ServiceInterface
+	Do(opts ...googleapi.CallOption) (*people.ListConnectionsResponse, error)
+}
+
+type Service struct {
+	ListConnections func(resourceName string) ServiceInterface
+}
+
 type Contact struct {
 	Name     string
 	Birthday people.Date
 }
 
-var service *people.Service
-
-func ListAllContacts() []Contact {
+func (cs *Service) ListAllContacts() []Contact {
 	var contacts = make([]Contact, 0)
 	var nextPageToken string
-	if service == nil {
-		createService()
-	}
 
 	for {
-		response, updated, err := listContactsPaginated(nextPageToken, contacts)
+		response, updated, err := cs.listContactsPaginated(nextPageToken, contacts)
 		if err != nil {
 			log.Fatalf("Error listing contacts: %v", err)
 		}
@@ -42,8 +49,8 @@ func ListAllContacts() []Contact {
 	return contacts
 }
 
-func listContactsPaginated(pageToken string, contacts []Contact) (*people.ListConnectionsResponse, []Contact, error) {
-	response, err := service.People.Connections.List("people/me").
+func (cs *Service) listContactsPaginated(pageToken string, contacts []Contact) (*people.ListConnectionsResponse, []Contact, error) {
+	response, err := cs.ListConnections("people/me").
 		PageToken(pageToken).
 		PersonFields("names,birthdays").
 		Do()
@@ -62,19 +69,23 @@ func listContactsPaginated(pageToken string, contacts []Contact) (*people.ListCo
 	return response, contacts, nil
 }
 
-func createService() {
+func NewContactService(config *config.Config) *Service {
 	ctx := context.Background()
-	credentials := parseCredentialsConfig()
-	client := createClient(credentials)
+	credentials := parseCredentialsConfig(config)
+	client := createClient(credentials, config)
 
 	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Fatalf("Unable to create people client %v", err)
 	}
-	service = srv
+	return &Service{
+		ListConnections: func(resourceName string) ServiceInterface {
+			return &PeopleApiWrapper{call: srv.People.Connections.List(resourceName)}
+		},
+	}
 }
 
-func createClient(credentials *oauth2.Config) *http.Client {
+func createClient(credentials *oauth2.Config, config *config.Config) *http.Client {
 	expiry, err := time.Parse(time.RFC3339, config.PeopleApi.Token.Expiry)
 	if err != nil {
 		log.Fatalf("Unable to parse expiry %v", err)
@@ -87,7 +98,7 @@ func createClient(credentials *oauth2.Config) *http.Client {
 	})
 }
 
-func parseCredentialsConfig() *oauth2.Config {
+func parseCredentialsConfig(config *config.Config) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     config.PeopleApi.Credentials.ClientId,
 		ClientSecret: config.PeopleApi.Credentials.ClientSecret,

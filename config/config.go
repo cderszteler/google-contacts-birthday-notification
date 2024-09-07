@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"gopkg.in/yaml.v2"
@@ -43,21 +43,22 @@ type Token struct {
 	Expiry       string `yaml:"expiry"`
 }
 
-func ReadConfig(cfg *Config) error {
+func ReadConfig() (*Config, error) {
+	var cfg *Config
 	path := configPath()
 	file, err := os.Open(path)
 	if os.IsNotExist(err) {
 		if err := createDefaultConfig(path); err != nil {
-			return err
+			return cfg, err
 		}
 		file, err = os.Open(path)
 	}
 	if err != nil {
-		return err
+		return cfg, err
 	}
 	defer file.Close()
 
-	return yaml.NewDecoder(file).Decode(cfg)
+	return cfg, yaml.NewDecoder(file).Decode(cfg)
 }
 
 func configPath() string {

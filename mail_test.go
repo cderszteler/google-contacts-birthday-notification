@@ -2,13 +2,14 @@ package main
 
 import (
 	"errors"
+	"google-contacts-birthday-notification/config"
 	"testing"
 
 	"github.com/wneessen/go-mail"
 )
 
-var mockConfig = Config{
-	Mail: Mail{
+var mockConfig = &config.Config{
+	Mail: config.Mail{
 		Host:     "smtp.example.com",
 		Port:     587,
 		User:     "testuser",
@@ -21,89 +22,80 @@ var mockConfig = Config{
 }
 
 // MockClient is a mock mail client for testing
-type MockClient struct {
+type mockClient struct {
 	DialAndSendCalled bool
 	DialAndSendError  error
 }
 
-func (m *MockClient) DialAndSend(_ ...*mail.Msg) error {
+func (m *mockClient) DialAndSend(_ ...*mail.Msg) error {
 	m.DialAndSendCalled = true
 	return m.DialAndSendError
 }
 
 func TestCreateMailClient(t *testing.T) {
-	origConfig := config
-	origClient := client
+	origConfig := mockConfig
 	defer func() {
-		config = origConfig
-		client = origClient
+		mockConfig = origConfig
 	}()
-	config = mockConfig
 
 	// Test TLSMandatory
-	config.Mail.Tls = true
-	config.Mail.Secure = true
+	mockConfig.Mail.Tls = true
+	mockConfig.Mail.Secure = true
 	testCreation(t)
 
 	// Test TLSOpportunistic
-	config.Mail.Tls = true
-	config.Mail.Secure = false
+	mockConfig.Mail.Tls = true
+	mockConfig.Mail.Secure = false
 	testCreation(t)
 
 	// Test NoTLS
-	config.Mail.Tls = false
-	config.Mail.Secure = false
+	mockConfig.Mail.Tls = false
+	mockConfig.Mail.Secure = false
 	testCreation(t)
 }
 
 func testCreation(t *testing.T) {
-	createMailClient()
+	client := NewMailService(mockConfig)
 	if client == nil {
 		t.Error("Expected client to be created, but it's nil")
 	}
 }
 
 func TestSendMail(t *testing.T) {
-	origConfig := config
-	origClient := client
-	defer func() {
-		config = origConfig
-		client = origClient
-	}()
-	config = mockConfig
-
-	// Create a mock client
-	mockClient := &MockClient{}
-	client = mockClient
+	client := &mockClient{}
+	service := &MailService{
+		config: mockConfig,
+		client: client,
+	}
 
 	// Test successful send
-	err := SendMail("Test message")
+	err := service.SendMail("Test message")
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if !mockClient.DialAndSendCalled {
+	if !client.DialAndSendCalled {
 		t.Error("Expected DialAndSend to be called, but it wasn't")
 	}
 
 	// Test error in DialAndSend
 	expectedError := errors.New("failed to send email")
-	mockClient.DialAndSendError = expectedError
-	err = SendMail("Test message")
+	client.DialAndSendError = expectedError
+	err = service.SendMail("Test message")
 	if !errors.Is(expectedError, err) {
 		t.Errorf("Expected %v, got %v", expectedError, err)
 	}
 
 	// Test error in setting From address
-	config.Mail.Sender = "invalid-email"
-	err = SendMail("Test message")
+	mockConfig.Mail.Sender = "invalid-email"
+	err = service.SendMail("Test message")
 	if err == nil {
 		t.Error("Expected an error when setting an invalid From address, but got none")
 	}
 
 	// Test error in setting To address
-	config.Mail.Sender = "sender@example.com"
-	config.Mail.Receiver = "invalid-email"
-	err = SendMail("Test message")
+	mockConfig.Mail.Sender = "sender@example.com"
+	mockConfig.Mail.Receiver = "invalid-email"
+	err = service.SendMail("Test message")
 	if err == nil {
 		t.Error("Expected an error when setting an invalid To address, but got none")
 	}
