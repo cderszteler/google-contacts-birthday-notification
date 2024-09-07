@@ -8,7 +8,7 @@ import (
 	"github.com/wneessen/go-mail"
 )
 
-var mockConfig = &config.Config{
+var mockConfig = config.Config{
 	Mail: config.Mail{
 		Host:     "smtp.example.com",
 		Port:     587,

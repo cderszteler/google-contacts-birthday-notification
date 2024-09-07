@@ -14,19 +14,19 @@ import (
 	"google.golang.org/api/people/v1"
 )
 
-type ServiceInterface interface {
-	PersonFields(personFields string) ServiceInterface
-	PageToken(pageToken string) ServiceInterface
-	Do(opts ...googleapi.CallOption) (*people.ListConnectionsResponse, error)
-}
-
 type Service struct {
-	ListConnections func(resourceName string) ServiceInterface
+	ListConnections func(resourceName string) serviceInterface
 }
 
 type Contact struct {
 	Name     string
 	Birthday people.Date
+}
+
+type serviceInterface interface {
+	PersonFields(personFields string) serviceInterface
+	PageToken(pageToken string) serviceInterface
+	Do(opts ...googleapi.CallOption) (*people.ListConnectionsResponse, error)
 }
 
 func (cs *Service) ListAllContacts() []Contact {
@@ -69,7 +69,7 @@ func (cs *Service) listContactsPaginated(pageToken string, contacts []Contact) (
 	return response, contacts, nil
 }
 
-func NewContactService(config *config.Config) *Service {
+func NewContactService(config config.Config) *Service {
 	ctx := context.Background()
 	credentials := parseCredentialsConfig(config)
 	client := createClient(credentials, config)
@@ -79,13 +79,13 @@ func NewContactService(config *config.Config) *Service {
 		log.Fatalf("Unable to create people client %v", err)
 	}
 	return &Service{
-		ListConnections: func(resourceName string) ServiceInterface {
-			return &PeopleApiWrapper{call: srv.People.Connections.List(resourceName)}
+		ListConnections: func(resourceName string) serviceInterface {
+			return &peopleApiWrapper{call: srv.People.Connections.List(resourceName)}
 		},
 	}
 }
 
-func createClient(credentials *oauth2.Config, config *config.Config) *http.Client {
+func createClient(credentials *oauth2.Config, config config.Config) *http.Client {
 	expiry, err := time.Parse(time.RFC3339, config.PeopleApi.Token.Expiry)
 	if err != nil {
 		log.Fatalf("Unable to parse expiry %v", err)
@@ -98,7 +98,7 @@ func createClient(credentials *oauth2.Config, config *config.Config) *http.Clien
 	})
 }
 
-func parseCredentialsConfig(config *config.Config) *oauth2.Config {
+func parseCredentialsConfig(config config.Config) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     config.PeopleApi.Credentials.ClientId,
 		ClientSecret: config.PeopleApi.Credentials.ClientSecret,

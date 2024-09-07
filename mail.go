@@ -5,16 +5,16 @@ import (
 	"google-contacts-birthday-notification/config"
 )
 
-type MailClientInterface interface {
+type MailService struct {
+	client mailClientInterface
+	config config.Config
+}
+
+type mailClientInterface interface {
 	DialAndSend(messages ...*mail.Msg) error
 }
 
-type MailService struct {
-	client MailClientInterface
-	config *config.Config
-}
-
-func NewMailService(config *config.Config) *MailService {
+func NewMailService(config config.Config) *MailService {
 	var tlsPolicy mail.TLSPolicy
 	if config.Mail.Tls && config.Mail.Secure {
 		tlsPolicy = mail.TLSMandatory

@@ -5,20 +5,20 @@ import (
 	"google.golang.org/api/people/v1"
 )
 
-type PeopleApiWrapper struct {
+type peopleApiWrapper struct {
 	call *people.PeopleConnectionsListCall
 }
 
-func (wrapper *PeopleApiWrapper) PageToken(pageToken string) ServiceInterface {
+func (wrapper *peopleApiWrapper) PageToken(pageToken string) serviceInterface {
 	wrapper.call.PageToken(pageToken)
 	return wrapper
 }
 
-func (wrapper *PeopleApiWrapper) PersonFields(personFields string) ServiceInterface {
+func (wrapper *peopleApiWrapper) PersonFields(personFields string) serviceInterface {
 	wrapper.call.PersonFields(personFields)
 	return wrapper
 }
 
-func (wrapper *PeopleApiWrapper) Do(opts ...googleapi.CallOption) (*people.ListConnectionsResponse, error) {
+func (wrapper *peopleApiWrapper) Do(opts ...googleapi.CallOption) (*people.ListConnectionsResponse, error) {
 	return wrapper.call.Do(opts...)
 }
