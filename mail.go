@@ -4,9 +4,12 @@ import (
 	"github.com/wneessen/go-mail"
 )
 
-var client *mail.Client
+var client MailClientInterface
 
-func createClient() {
+type MailClientInterface interface {
+	DialAndSend(messages ...*mail.Msg) error
+}
+
 func createMailClient() {
 	var tlsPolicy mail.TLSPolicy
 	if config.Mail.Tls && config.Mail.Secure {
