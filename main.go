@@ -67,8 +67,7 @@ func filterContacts(contacts []contact.Contact) ([]contact.Contact, []contact.Co
 
 func matchDateAndTime(date people.Date, time time.Time) bool {
 	return int(date.Day) == time.Day() &&
-		int(date.Month) == int(time.Month()) &&
-		(date.Year == 0 || int(date.Year) == time.Year())
+		int(date.Month) == int(time.Month())
 }
 
 func processError(err error) {
