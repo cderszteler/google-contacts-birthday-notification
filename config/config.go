@@ -43,6 +43,21 @@ type Token struct {
 	Expiry       string `yaml:"expiry"`
 }
 
+func WriteConfig(config Config) error {
+	path := configPath()
+	file, err := os.OpenFile(path, os.O_CREATE, 0)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	return yaml.NewEncoder(file).Encode(config)
+}
+
 func ReadConfig() (Config, error) {
 	var cfg Config
 	path := configPath()
@@ -56,7 +71,11 @@ func ReadConfig() (Config, error) {
 	if err != nil {
 		return cfg, err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
 	return cfg, yaml.NewDecoder(file).Decode(&cfg)
 }
