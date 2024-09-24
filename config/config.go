@@ -45,7 +45,7 @@ type Token struct {
 
 func WriteConfig(config Config) error {
 	path := configPath()
-	file, err := os.OpenFile(path, os.O_CREATE, 0)
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0)
 	if err != nil {
 		return err
 	}
